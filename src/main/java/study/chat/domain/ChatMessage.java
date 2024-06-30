@@ -1,4 +1,4 @@
-package study.domain;
+package study.chat.domain;
 
 import lombok.Builder;
 import lombok.Getter;

@@ -1,15 +1,12 @@
-package study.presentation;
+package study.chat.presentation;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.HtmlUtils;
-import study.domain.ChatMessage;
-import study.domain.Greeting;
-import study.domain.HelloMessage;
-import study.domain.MessageType;
+import study.chat.domain.Greeting;
+import study.chat.domain.HelloMessage;
 
 @Slf4j
 @Controller
