@@ -12,8 +12,8 @@ import study.chat.domain.HelloMessage;
 @Controller
 public class ChatController {
 
-    @MessageMapping("/hello")
-    @SendTo("/topic/greetings")
+    @MessageMapping("/message")
+    @SendTo("/topic/messages")
     public Greeting greeting(HelloMessage message) throws Exception {
         Thread.sleep(1000); // simulated delay
         return new Greeting("Hello, " + HtmlUtils.htmlEscape(message.getName()) + "!");
