@@ -1,7 +1,7 @@
-package study.chat.dto;
+package study.chat.dto.chat_room;
 
 import lombok.Builder;
-import study.chat.domain.ChatRoom;
+import study.chat.entity.ChatRoom;
 
 @Builder
 public record ChatRoomResponse(
@@ -13,7 +13,7 @@ public record ChatRoomResponse(
     public static ChatRoomResponse from(final ChatRoom chatRoom){
         return ChatRoomResponse.builder()
                 .id(chatRoom.getId())
-                .ownerId(chatRoom.getOwnerId())
+                .ownerId(chatRoom.getMemberId())
                 .name(chatRoom.getName())
                 .build();
     }

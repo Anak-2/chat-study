@@ -1,7 +1,7 @@
-package study.chat.repository;
+package study.chat.repository.chat_message;
 
 import org.springframework.stereotype.Repository;
-import study.chat.domain.ChatMessage;
+import study.chat.entity.ChatMessage;
 
 @Repository
 public class ChatMessageRepository {

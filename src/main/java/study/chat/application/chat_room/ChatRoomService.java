@@ -1,9 +1,10 @@
-package study.chat.application;
+package study.chat.application.chat_room;
 
 import org.springframework.stereotype.Service;
-import study.chat.dto.ChatRoomRequest;
-import study.chat.dto.ChatRoomResponse;
-import study.chat.repository.ChatRoomRepository;
+import org.springframework.transaction.annotation.Transactional;
+import study.chat.dto.chat_room.ChatRoomAppendRequest;
+import study.chat.dto.chat_room.ChatRoomResponse;
+import study.chat.repository.chat_room.ChatRoomRepository;
 
 import java.util.List;
 
@@ -16,12 +17,14 @@ public class ChatRoomService {
         this.chatRoomRepository = chatRoomRepository;
     }
 
+    @Transactional(readOnly = true)
     public List<ChatRoomResponse> getAll() {
         return chatRoomRepository.getAll().stream()
                 .map(ChatRoomResponse::from).toList();
     }
 
-    public void append(final ChatRoomRequest chatRoomRequest) {
-        chatRoomRepository.save(chatRoomRequest.toEntity());
+    @Transactional
+    public void append(final ChatRoomAppendRequest chatRoomAppendRequest) {
+        chatRoomRepository.save(chatRoomAppendRequest.toEntity());
     }
 }

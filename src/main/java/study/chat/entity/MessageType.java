@@ -1,4 +1,4 @@
-package study.chat.domain;
+package study.chat.entity;
 
 public enum MessageType {
     CHAT,

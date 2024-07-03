@@ -1,4 +1,4 @@
-package study.chat.domain;
+package study.chat.entity;
 
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -14,6 +14,8 @@ public class ChatMessage {
     private long id;
     @Association @Column(name = "chat_room_id")
     private long roomId;
+    @Association @Column(name = "member_id")
+    private long memberId;
     private MessageType type;
     private String content;
     private String sender;

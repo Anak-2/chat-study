@@ -1,7 +1,7 @@
-package study.chat.repository;
+package study.chat.repository.chat_room;
 
 import org.springframework.stereotype.Repository;
-import study.chat.domain.ChatRoom;
+import study.chat.entity.ChatRoom;
 
 import java.util.List;
 

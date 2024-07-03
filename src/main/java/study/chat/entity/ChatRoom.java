@@ -1,4 +1,4 @@
-package study.chat.domain;
+package study.chat.entity;
 
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -12,15 +12,15 @@ public class ChatRoom {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "chat_room_id")
     private long id;
-    @Association @Column(name = "owner_id")
-    private long ownerId;
+    @Association
+    private long memberId;
     private String name;
 
     protected ChatRoom(){}
 
     @Builder
-    public ChatRoom(final long ownerId, final String name) {
-        this.ownerId = ownerId;
+    public ChatRoom(final long memberId, final String name) {
+        this.memberId = memberId;
         this.name = name;
     }
 }
