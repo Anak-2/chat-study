@@ -3,6 +3,7 @@ package study.chat.repository.chat_room;
 import org.springframework.stereotype.Repository;
 import study.chat.entity.ChatRoom;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Repository
@@ -19,6 +20,7 @@ public class ChatRoomRepository {
     }
 
     public List<ChatRoom> getAll(){
-        return chatRoomJpaRepository.findAll();
+        return chatRoomJpaRepository.findAll()
+                .stream().sorted(Comparator.comparingLong(ChatRoom::getId)).toList();
     }
 }

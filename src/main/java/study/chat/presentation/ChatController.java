@@ -5,11 +5,15 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
+import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.util.HtmlUtils;
 import study.chat.application.subscription.SubscriptionService;
 import study.chat.dto.chat_message.SimpleChatMessage;
+import study.chat.dto.chat_message.SimpleChatMessageResponse;
 import study.chat.entity.ChatMessage;
 import study.chat.entity.Greeting;
 import study.chat.entity.HelloMessage;
@@ -22,9 +26,12 @@ import java.security.Principal;
 public class ChatController {
 
     private final SubscriptionService subscriptionService;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public ChatController(SubscriptionService subscriptionService) {
+    public ChatController(final SubscriptionService subscriptionService,
+                          final SimpMessagingTemplate messagingTemplate) {
         this.subscriptionService = subscriptionService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @MessageMapping("/message")
@@ -42,10 +49,8 @@ public class ChatController {
 
     @MessageMapping("/chat/{roomId}")
     @SendTo("/topic/chat/{roomId}")
-    public String sendMessage(@DestinationVariable final long roomId, final SimpleChatMessage scm) {
-        if (!subscriptionService.isSubscribed(scm.memberId(), roomId)) {
-            throw new BadRequestException("User is not subscribed to this room");
-        }
-        return scm.content();
+    public SimpleChatMessageResponse sendMessage(@DestinationVariable final long roomId, final SimpleChatMessage scm) {
+        // todo: 메시지 큐에 저장 + 일정 시간 이후 DB에 저장
+        return SimpleChatMessageResponse.from(scm);
     }
 }

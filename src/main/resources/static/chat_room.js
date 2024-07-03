@@ -1,19 +1,40 @@
 const apiPrefix = '/api/v1'; // API prefix
 let stompClient = null;
 let currentRoomId = null;
-const memberId = 1; // 예시 멤버 ID
+let memberId = 1; // 예시 멤버 ID
 
 document.addEventListener('DOMContentLoaded', function () {
+    promptForMemberId();
     loadChatRooms();
 });
 
-function loadChatRooms() {
-    axios.get(apiPrefix + '/chat-rooms')
-        .then(response => {
-            const chatRooms = response.data.data;
-            displayChatRooms(chatRooms);
-        })
-        .catch(error => console.error('Error:', error));
+async function promptForMemberId() {
+    let inputMemberId = prompt("사용자 ID를 입력하세요:");
+
+    // 사용자가 취소를 누르거나 빈 값을 입력한 경우 처리
+    if (inputMemberId === null || inputMemberId.trim() === "") {
+        alert("사용자 ID가 유효하지 않습니다. 페이지를 새로고침하여 다시 시도하세요.");
+        return;
+    }
+
+    // 입력된 memberId를 전역 변수에 할당
+    memberId = parseInt(inputMemberId); // 예시로 parseInt를 사용하여 숫자로 변환
+    if (isNaN(memberId)) {
+        alert("유효하지 않은 사용자 ID입니다. 페이지를 새로고침하여 다시 시도하세요.");
+        memberId = null; // memberId 초기화
+    } else {
+        console.log("사용자 ID로 설정된 값:", memberId);
+    }
+}
+
+async function loadChatRooms() {
+    try {
+        const response = await axios.get(apiPrefix + '/chat-rooms');
+        const chatRooms = response.data.data;
+        displayChatRooms(chatRooms);
+    } catch (error) {
+        console.error('Error:', error);
+    }
 }
 
 async function displayChatRooms(chatRooms) {
@@ -23,20 +44,20 @@ async function displayChatRooms(chatRooms) {
     for (const room of chatRooms) {
         const roomElement = document.createElement('div');
         roomElement.textContent = room.name;
-        roomElement.onclick = () => enterChatRoom(room.id);
-        roomElement.style.cursor = 'pointer';
 
-        const button = await displayButton(room); // await를 사용하여 버튼을 기다림
-        console.log(button);
-
+        const button = await displayButton(room);
         if (button) {
             roomElement.appendChild(button);
         }
-        roomElement.style.display = 'flex';
+
+        const enterButton = document.createElement('button');
+        enterButton.textContent = 'Enter Room';
+        enterButton.onclick = (event) => enterChatRoom(room.id);
+
+        roomElement.appendChild(enterButton);
         chatRoomsContainer.appendChild(roomElement);
     }
 }
-
 
 async function displayButton(room) {
     try {
@@ -54,6 +75,7 @@ async function displayButton(room) {
             button = document.createElement('button');
             button.textContent = 'Unsubscribe';
             button.onclick = (event) => unsubscribeFromRoom(room.id, event);
+
         } else {
             button = document.createElement('button');
             button.textContent = 'Subscribe';
@@ -67,60 +89,85 @@ async function displayButton(room) {
     }
 }
 
+async function subscribeToRoom(roomId) {
+    try {
+        const subscriptionRequest = {
+            memberId: memberId,
+            roomId: roomId
+        };
 
-function subscribeToRoom(roomId, event) {
-    const subscriptionRequest = {
-        memberId: memberId,
-        roomId: roomId
-    };
+        const response = await axios.post(apiPrefix + '/subscribe', subscriptionRequest);
+        alert(response.data);
 
-    axios.post(apiPrefix + '/subscribe', subscriptionRequest)
-        .then(response => {
-            alert(response.data);
-            loadChatRooms();
-        })
-        .catch(error => {
-            if (error.response) {
-                const statusCode = error.response.status;
-                const message = error.response.data;
-                alert(`Error ${statusCode}: ${message}`);
-            } else if (error.request) {
-                alert('No response received from the server.');
-            } else {
-                alert(`Error: ${error.message}`);
-            }
-            console.error('Error:', error);
-        });
-}
+        if (!stompClient) {
+            await connectToWebSocket();
+        }
 
-function unsubscribeFromRoom(roomId, event) {
-    const unsubscribeRequest = {
-        memberId: memberId,
-        roomId: roomId
-    };
-
-    axios.delete(apiPrefix + '/unsubscribe', {data: unsubscribeRequest})
-        .then(response => {
-            alert(response.data);
-            loadChatRooms();
-        })
-        .catch(error => console.error('Error:', error));
-}
-
-function enterChatRoom(roomId) {
-    currentRoomId = roomId;
-    document.getElementById('chat-room-container').style.display = 'block';
-
-    connectToWebSocket(roomId);
-}
-
-function connectToWebSocket(roomId) {
-    const socket = new SockJS('/ws'); // WebSocket 엔드포인트
-    stompClient = Stomp.over(socket);
-
-    stompClient.connect({}, () => {
         stompClient.subscribe(`/topic/chat/${roomId}`, (message) => {
-            showMessage(JSON.parse(message.body).content);
+            const parsedMessage = JSON.parse(message.body);
+            showMessage(parsedMessage.memberId, parsedMessage.content);
+        });
+
+        loadChatRooms();
+    } catch (error) {
+        handleError(error);
+    }
+}
+
+async function unsubscribeFromRoom(roomId, event) {
+    try {
+        const unsubscribeRequest = {
+            memberId: memberId,
+            roomId: roomId
+        };
+
+        const response = await axios.delete(apiPrefix + '/unsubscribe', { data: unsubscribeRequest });
+        alert(response.data);
+
+        if (stompClient) {
+            stompClient.unsubscribe(`/topic/chat/${roomId}`);
+        }
+
+        loadChatRooms();
+    } catch (error) {
+        handleError(error);
+    }
+}
+
+async function enterChatRoom(roomId) {
+    currentRoomId = roomId;
+
+    try {
+        const response = await axios.get(apiPrefix + '/check-subscribe', {
+            params: {
+                memberId: memberId,
+                roomId: roomId
+            }
+        });
+
+        const isSubscribed = response.data;
+
+        if (isSubscribed) {
+            document.getElementById('chat-room-container').style.display = 'block';
+        } else {
+            alert("채팅방을 먼저 구독하세요");
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+async function connectToWebSocket() {
+    return new Promise((resolve, reject) => {
+        const socket = new SockJS('/ws'); // WebSocket 엔드포인트
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, () => {
+            console.log('WebSocket 연결 성공');
+            resolve(stompClient);
+        }, error => {
+            console.error('WebSocket 연결 실패:', error);
+            reject(error);
         });
     });
 }
@@ -132,22 +179,44 @@ function sendMessage() {
         content: messageInput.value
     };
 
-    stompClient.send(`/app/chat/${currentRoomId}`, {}, JSON.stringify(message));
-    messageInput.value = '';
+    if (!stompClient) {
+        connectToWebSocket()
+            .then(() => {
+                stompClient.send(`/app/chat/${currentRoomId}`, {}, JSON.stringify(message));
+                messageInput.value = '';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    } else {
+        stompClient.send(`/app/chat/${currentRoomId}`, {}, JSON.stringify(message));
+        messageInput.value = '';
+    }
 }
 
-function showMessage(message) {
+function showMessage(id, content) {
+    console.log('call show');
     const messagesContainer = document.getElementById('messages');
     const messageElement = document.createElement('div');
-    messageElement.textContent = message;
+    messageElement.textContent = "member" + id + " : " + content;
     messagesContainer.appendChild(messageElement);
 }
 
 function leaveRoom() {
-    if (stompClient !== null) {
-        stompClient.disconnect();
-    }
     currentRoomId = null;
     document.getElementById('chat-room-container').style.display = 'none';
     document.getElementById('chat-rooms').style.display = 'block';
+}
+
+function handleError(error) {
+    if (error.response) {
+        const statusCode = error.response.status;
+        const message = error.response.data;
+        alert(`Error ${statusCode}: ${message}`);
+    } else if (error.request) {
+        alert('No response received from the server.');
+    } else {
+        alert(`Error: ${error.message}`);
+    }
+    console.error('Error:', error);
 }

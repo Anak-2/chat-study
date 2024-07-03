@@ -41,12 +41,12 @@ public class ChatRoomController {
     @PostMapping("/subscribe")
     public ResponseEntity<String> subscribe(@RequestBody final SubscriptionRequest subscriptionRequest) {
         subscriptionService.subscribe(subscriptionRequest);
-        return ResponseEntity.ok("Successfully subscribed to the room.");
+        return ResponseEntity.ok("채팅방 입장 완료.");
     }
 
     @DeleteMapping("/unsubscribe")
     public ResponseEntity<String> unsubscribe(@RequestBody final UnsubscribeRequest unsubscribeRequest) {
         subscriptionService.unsubscribe(unsubscribeRequest);
-        return ResponseEntity.ok("Successfully unsubscribed from the room.");
+        return ResponseEntity.ok("채팅방 탈퇴 완료.");
     }
 }
