@@ -16,25 +16,59 @@ function loadChatRooms() {
         .catch(error => console.error('Error:', error));
 }
 
-function displayChatRooms(chatRooms) {
+async function displayChatRooms(chatRooms) {
     const chatRoomsContainer = document.getElementById('chat-rooms');
     chatRoomsContainer.innerHTML = '';
 
-    chatRooms.forEach(room => {
+    for (const room of chatRooms) {
         const roomElement = document.createElement('div');
         roomElement.textContent = room.name;
         roomElement.onclick = () => enterChatRoom(room.id);
+        roomElement.style.cursor = 'pointer';
 
-        const button = document.createElement('button');
-        button.textContent = 'Subscribe';
-        button.onclick = () => subscribeToRoom(room.id);
+        const button = await displayButton(room); // await를 사용하여 버튼을 기다림
+        console.log(button);
 
-        roomElement.appendChild(button);
+        if (button) {
+            roomElement.appendChild(button);
+        }
+        roomElement.style.display = 'flex';
         chatRoomsContainer.appendChild(roomElement);
-    });
+    }
 }
 
-function subscribeToRoom(roomId) {
+
+async function displayButton(room) {
+    try {
+        const response = await axios.get(apiPrefix + '/check-subscribe', {
+            params: {
+                memberId: memberId,
+                roomId: room.id
+            }
+        });
+
+        const isSubscribed = response.data;
+        let button = null;
+
+        if (isSubscribed) {
+            button = document.createElement('button');
+            button.textContent = 'Unsubscribe';
+            button.onclick = (event) => unsubscribeFromRoom(room.id, event);
+        } else {
+            button = document.createElement('button');
+            button.textContent = 'Subscribe';
+            button.onclick = (event) => subscribeToRoom(room.id, event);
+        }
+
+        return button;
+    } catch (error) {
+        console.error('Error:', error);
+        return null; // 에러 발생 시 null을 반환하여 처리
+    }
+}
+
+
+function subscribeToRoom(roomId, event) {
     const subscriptionRequest = {
         memberId: memberId,
         roomId: roomId
@@ -59,7 +93,7 @@ function subscribeToRoom(roomId) {
         });
 }
 
-function unsubscribeFromRoom(roomId) {
+function unsubscribeFromRoom(roomId, event) {
     const unsubscribeRequest = {
         memberId: memberId,
         roomId: roomId

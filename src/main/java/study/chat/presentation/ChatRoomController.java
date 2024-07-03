@@ -33,6 +33,11 @@ public class ChatRoomController {
         chatRoomService.append(chatRoomAppendRequest);
     }
 
+    @GetMapping("/check-subscribe")
+    public ResponseEntity<Boolean> checkSubscribe(@RequestParam final long memberId, @RequestParam final long roomId){
+        return ResponseEntity.ok(subscriptionService.isSubscribed(memberId, roomId));
+    }
+
     @PostMapping("/subscribe")
     public ResponseEntity<String> subscribe(@RequestBody final SubscriptionRequest subscriptionRequest) {
         subscriptionService.subscribe(subscriptionRequest);
