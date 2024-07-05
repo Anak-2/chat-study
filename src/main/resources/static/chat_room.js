@@ -2,6 +2,7 @@ const apiPrefix = '/api/v1'; // API prefix
 let stompClient = null;
 let currentRoomId = null;
 let memberId = 1; // 예시 멤버 ID
+let subscriptions = {};
 
 document.addEventListener('DOMContentLoaded', function () {
     promptForMemberId();
@@ -103,7 +104,7 @@ async function subscribeToRoom(roomId) {
             await connectToWebSocket();
         }
 
-        stompClient.subscribe(`/topic/chat/${roomId}`, (message) => {
+        subscriptions[roomId] = stompClient.subscribe(`/topic/chat/${roomId}`, (message) => {
             const parsedMessage = JSON.parse(message.body);
             showMessage(parsedMessage.memberId, parsedMessage.content);
         });
@@ -126,6 +127,10 @@ async function unsubscribeFromRoom(roomId, event) {
 
         if (stompClient) {
             stompClient.unsubscribe(`/topic/chat/${roomId}`);
+            if (subscriptions[roomId]) {
+                subscriptions[roomId].unsubscribe();
+                delete subscriptions[roomId];
+            }
         }
 
         loadChatRooms();
