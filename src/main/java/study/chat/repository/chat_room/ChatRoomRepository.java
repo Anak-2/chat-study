@@ -23,4 +23,8 @@ public class ChatRoomRepository {
         return chatRoomJpaRepository.findAll()
                 .stream().sorted(Comparator.comparingLong(ChatRoom::getId)).toList();
     }
+
+    public void delete(final long memberId, final long roomId){
+        chatRoomJpaRepository.deleteByMemberIdAndId(memberId, roomId);
+    }
 }

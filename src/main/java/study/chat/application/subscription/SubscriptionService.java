@@ -2,9 +2,13 @@ package study.chat.application.subscription;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import study.chat.application.chat_message.ChatMessageService;
+import study.chat.dto.chat_message.ChatJoinMessageRequest;
+import study.chat.dto.chat_message.ChatLeaveMessageRequest;
 import study.chat.dto.subscription.UnsubscribeRequest;
 import study.chat.dto.subscription.SubscriptionRequest;
 import study.chat.global.error.runtime_exception.BadRequestException;
+import study.chat.implement.chat_message.ChatMessageAppender;
 import study.chat.repository.chat_room.ChatRoomRepository;
 import study.chat.repository.subscription.SubscriptionRepository;
 
@@ -12,12 +16,12 @@ import study.chat.repository.subscription.SubscriptionRepository;
 public class SubscriptionService {
 
     private final SubscriptionRepository subscriptionRepository;
-    private final ChatRoomRepository chatRoomRepository;
+    private final ChatMessageAppender chatMessageAppender;
 
     public SubscriptionService(final SubscriptionRepository subscriptionRepository,
-                               final ChatRoomRepository chatRoomRepository) {
+                               final ChatMessageAppender chatMessageAppender) {
         this.subscriptionRepository = subscriptionRepository;
-        this.chatRoomRepository = chatRoomRepository;
+        this.chatMessageAppender = chatMessageAppender;
     }
 
     @Transactional
@@ -28,6 +32,7 @@ public class SubscriptionService {
             throw new BadRequestException("이미 구독한 채팅방");
         }
         subscriptionRepository.save(subscriptionRequest.toEntity());
+        chatMessageAppender.appendJoinChat(ChatJoinMessageRequest.from(subscriptionRequest));
     }
 
     @Transactional
@@ -35,6 +40,7 @@ public class SubscriptionService {
         final long roomId = unsubscribeRequest.roomId();
         final long memberId = unsubscribeRequest.memberId();
         subscriptionRepository.deleteByMemberIdAndRoomId(memberId, roomId);
+        chatMessageAppender.appendLeaveChat(ChatLeaveMessageRequest.from(unsubscribeRequest));
     }
 
     @Transactional(readOnly = true)

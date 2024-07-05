@@ -3,6 +3,8 @@ package study.chat.repository.chat_message;
 import org.springframework.stereotype.Repository;
 import study.chat.entity.ChatMessage;
 
+import java.util.List;
+
 @Repository
 public class ChatMessageRepository {
 
@@ -14,5 +16,9 @@ public class ChatMessageRepository {
 
     public void save(final ChatMessage chatMessage){
         chatMessageJpaRepository.save(chatMessage);
+    }
+
+    public List<ChatMessage> getAllByRoomId(final long roomId){
+        return chatMessageJpaRepository.getAllByRoomId(roomId);
     }
 }

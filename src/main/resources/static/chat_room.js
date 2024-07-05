@@ -149,6 +149,21 @@ async function enterChatRoom(roomId) {
 
         if (isSubscribed) {
             document.getElementById('chat-room-container').style.display = 'block';
+            document.getElementById('chat-rooms').style.display = 'none';
+
+            // Fetch chat history
+            const messagesResponse = await axios.get(apiPrefix + '/chat-history/' + roomId);
+            console.log(messagesResponse);
+            const messages = messagesResponse.data.data;
+
+            // Clear existing messages
+            const messagesContainer = document.getElementById('messages');
+            messagesContainer.innerHTML = '';
+
+            // Display messages
+            messages.forEach(message => {
+                showMessage(message.memberId, message.content);
+            });
         } else {
             alert("채팅방을 먼저 구독하세요");
         }
@@ -195,7 +210,6 @@ function sendMessage() {
 }
 
 function showMessage(id, content) {
-    console.log('call show');
     const messagesContainer = document.getElementById('messages');
     const messageElement = document.createElement('div');
     messageElement.textContent = "member" + id + " : " + content;
@@ -206,6 +220,10 @@ function leaveRoom() {
     currentRoomId = null;
     document.getElementById('chat-room-container').style.display = 'none';
     document.getElementById('chat-rooms').style.display = 'block';
+
+    // Clear all messages
+    const messagesContainer = document.getElementById('messages');
+    messagesContainer.innerHTML = '';
 }
 
 function handleError(error) {

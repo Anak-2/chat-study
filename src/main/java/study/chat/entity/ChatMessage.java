@@ -24,8 +24,9 @@ public class ChatMessage {
     }
 
     @Builder
-    public ChatMessage(final long roomId, final MessageType type, final String content, final String sender) {
+    public ChatMessage(final long roomId, final long memberId, final MessageType type, final String content, final String sender) {
         this.roomId = roomId;
+        this.memberId = memberId;
         this.type = type;
         this.content = content;
         this.sender = sender;

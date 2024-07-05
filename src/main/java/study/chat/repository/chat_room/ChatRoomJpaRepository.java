@@ -9,4 +9,5 @@ import java.util.Optional;
 
 public interface ChatRoomJpaRepository extends JpaRepository<ChatRoom, Long> {
 
+    void deleteByMemberIdAndId(final long memberId, final long roomId);
 }
